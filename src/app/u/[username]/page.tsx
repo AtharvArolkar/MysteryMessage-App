@@ -37,7 +37,7 @@ export default function MessgaePage({
         username: params.username,
         content: data.content,
       });
-
+      form.setValue("content", "");
       toast({ title: "Message Sent" });
     } catch (error) {
       console.log(error);

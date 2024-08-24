@@ -113,7 +113,6 @@ export default function Dashboard() {
     }
   };
 
-  const path = usePathname();
   const hostUrl = `${window.location.protocol}//${window.location.host}`;
   const profileUrl = `${hostUrl}/u/${session?.user.username}`;
   const copyToClipboard = () => {
