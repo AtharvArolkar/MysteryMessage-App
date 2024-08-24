@@ -21,9 +21,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  if (url.pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/sign-in", "/sign-up"],
+  matcher: ["/sign-in", "/sign-up", "/"],
 };

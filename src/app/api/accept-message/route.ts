@@ -4,7 +4,6 @@ import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
 
 import { User } from "next-auth";
-import { userAgent } from "next/server";
 
 export async function POST(request: Request) {
   await dbConnect();
@@ -23,10 +22,12 @@ export async function POST(request: Request) {
   const { acceptMessages } = await request.json();
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
-      { _id: userAgent },
+      { _id: userId },
       { isAcceptingMessage: acceptMessages },
       { new: true }
     );
+
+    console.log(updatedUser, "user");
 
     if (!updatedUser) {
       console.error("Falided to update");
@@ -35,10 +36,15 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     } else {
-      return Response.json({ success: 201 });
+      return Response.json({
+        success: 201,
+        message: `Your are now ${
+          acceptMessages ? "" : "not"
+        } accepting messages`,
+      });
     }
   } catch (error) {
-    console.error("Falided to update");
+    console.error("Falided to update", error);
     return Response.json(
       { success: false, message: "Falided to update" },
       { status: 500 }
@@ -63,6 +69,7 @@ export async function GET(request: Request) {
   try {
     const userObject = await UserModel.findById({ _id: userId });
 
+    // console.log(userObject);
     if (!userObject) {
       return Response.json(
         { success: false, message: "Not found" },
@@ -71,7 +78,7 @@ export async function GET(request: Request) {
     }
     return Response.json(
       { success: true, isAcceptingMessage: userObject.isAcceptingMessage },
-      { status: 401 }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Falided to fetch");

@@ -18,7 +18,10 @@ export async function POST(request: Request) {
 
     if (!reciepent.isAcceptingMessage) {
       return Response.json(
-        { success: false, message: "User not accepting message" },
+        {
+          success: false,
+          message: `${username} is not accepting messages currently`,
+        },
         { status: 403 }
       );
     }
