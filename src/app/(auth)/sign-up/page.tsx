@@ -20,44 +20,73 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { signInSchema } from "@/schemas/signInSchema";
-import { signIn } from "next-auth/react";
 
 export default function SignUp() {
+  const [username, setUsername] = useState<string>("");
+  const [usernameMessage, setUsernameMessage] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const debounced = useDebounceCallback(setUsername, 500);
   const { toast } = useToast();
   const router = useRouter();
 
   //zod implenmntation
-  const form = useForm<z.infer<typeof signInSchema>>({
-    resolver: zodResolver(signInSchema),
+  const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
-      identifier: "",
+      username: "",
+      email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
     setIsSubmitting(true);
+    try {
+      const response = await axios.post<ApiResponse>("api/sign-up", data);
 
-    const result = await signIn("credentials", {
-      identifier: data.identifier,
-      password: data.password,
-      redirect: false,
-    });
-    if (result?.error) {
+      toast({ title: "Success", description: response.data.message });
+      router.replace(`/verify/${username}`);
+    } catch (error) {
+      console.error(error);
+      const axiosError = error as AxiosError<ApiResponse>;
+      let errorMessae = axiosError.response?.data.message;
       toast({
-        title: "Login failed",
-        description: "Incorrect username or password",
+        title: "Signup failed",
+        description: errorMessae,
         variant: "destructive",
       });
-    }
-
-    setIsSubmitting(false);
-    if (result?.url) {
-      router.replace("/dashboard");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const checkUsernameUnique = async () => {
+      if (username) {
+        setLoading(true);
+        setUsernameMessage("");
+        try {
+          const response = await axios.get(
+            `/api/check-username-unique?username=${username}`
+          );
+
+          let message = response.data.message;
+          setUsernameMessage(message);
+        } catch (error) {
+          const axiosError = error as AxiosError<ApiResponse>;
+          setUsernameMessage(
+            axiosError.response?.data.message ?? "Error checking username"
+          );
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkUsernameUnique();
+  }, [username]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-800">
@@ -71,7 +100,37 @@ export default function SignUp() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
-              name="identifier"
+              name="username"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <Input
+                    {...field}
+                    placeholder="Enter username"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      debounced(e.target.value);
+                    }}
+                  />
+                  {loading && <Loader2 className="animate-spin" />}
+                  {!loading && usernameMessage && (
+                    <p
+                      className={`text-sm ${
+                        usernameMessage === "Username is unique"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {usernameMessage}
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="email"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
@@ -108,16 +167,16 @@ export default function SignUp() {
                   Please wait
                 </>
               ) : (
-                "Sign In"
+                "Sign Up"
               )}
             </Button>
           </form>
         </Form>
         <div className="text-center mt-4">
           <p>
-            Create an account?{" "}
-            <Link href="/sign-up" className="text-blue-600 hover:text-blue-800">
-              Sign Up
+            Already a member?{" "}
+            <Link href="/sign-in" className="text-blue-600 hover:text-blue-800">
+              Sign in
             </Link>
           </p>
         </div>
