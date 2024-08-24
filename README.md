@@ -40,3 +40,10 @@ Enjoyed a lot building this project, a ton of knowledge gained.
     src="./public/ask-question.png"
     alt="Sign Up"
 />
+
+### Delete Message
+
+<img
+    src="./public/delete-message.png"
+    alt="Sign Up"
+/>
