@@ -1,4 +1,5 @@
 "use client";
+import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import { signOut } from "next-auth/react";
@@ -10,9 +11,7 @@ export default function RootLayout({
 }>) {
   return (
     <div>
-      <Button onClick={async () => await signOut({ callbackUrl: "/sign-in" })}>
-        Logout
-      </Button>
+      <Navbar />
       {children}
     </div>
   );
